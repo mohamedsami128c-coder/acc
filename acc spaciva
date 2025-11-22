@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>شيت التدريب - واجهة محسّنة</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f2f5;
+    text-align: center;
+    margin:0;
+    padding:0;
+}
+h2, h3 {
+    color: #333;
+}
+.section {
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 10px;
+    background: #fff;
+    width: 90%;
+    max-width: 700px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+input, textarea, select, button {
+    margin: 5px;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+button {
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+button:hover {
+    background-color: #45a049;
+}
+li {
+    list-style: none;
+    margin:5px 0;
+    padding:10px;
+    background:#f7f7f7;
+    border-radius:5px;
+    text-align: right;
+}
+.admin-header {
+    background: #333;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+}
+.employee-role {
+    background: #e8f0fe;
+    padding: 10px;
+    border-radius: 5px;
+}
+</style>
+</head>
+<body>
+
+<h2>شيت التدريب</h2>
+
+<!-- نافذة الباسورد -->
+<div id="adminLoginSection" class="section">
+  <h3 class="admin-header">تسجيل دخول الأدمن</h3>
+  <input type="password" id="adminPasswordInput" placeholder="أدخل كلمة المرور">
+  <button onclick="checkAdminPassword()">دخول</button>
+</div>
+
+<!-- لوحة الأدمن المخفية حتى إدخال الباسورد -->
+<div id="adminSection" class="section" style="display:none;">
+  <h3 class="admin-header">لوحة الأدمن</h3>
+  <label>الوظيفة:</label>
+  <select id="adminRole">
+    <option value="كاشير">كاشير</option>
+    <option value="مبيعات">مبيعات</option>
+    <option value="مدير">مدير</option>
+  </select><br>
+
+  <label>عنوان الدرس:</label>
+  <input type="text" id="lessonTitle" placeholder="أدخل عنوان الدرس"><br>
+
+  <label>محتوى الدرس:</label><br>
+  <textarea id="lessonContent" rows="4" cols="50" placeholder="أدخل محتوى الدرس"></textarea><br>
+
+  <button onclick="addLesson()">إضافة الدرس</button>
+
+  <h4>الدروس الحالية:</h4>
+  <ul id="adminLessonList"></ul>
+</div>
+
+<!-- اختيار الوظيفة وعرض الدروس -->
+<div class="section employee-role">
+  <h3>اختر وظيفتك لمشاهدة الدروس</h3>
+  <select id="employeeRole" onchange="showLessons()">
+    <option value="">اختر الوظيفة</option>
+    <option value="كاشير">كاشير</option>
+    <option value="مبيعات">مبيعات</option>
+    <option value="مدير">مدير</option>
+  </select>
+
+  <ul id="employeeLessonList"></ul>
+</div>
+
+<script>
+// الباسورد الخاص بالأدمن
+const ADMIN_PASSWORD = "12345"; // يمكن تغييره
+
+// بيانات الدروس
+let lessons = JSON.parse(localStorage.getItem('lessons') || '[]');
+
+// التحقق من الباسورد
+function checkAdminPassword() {
+  const input = document.getElementById('adminPasswordInput').value;
+  if(input === ADMIN_PASSWORD) {
+    document.getElementById('adminSection').style.display = 'block';
+    document.getElementById('adminLoginSection').style.display = 'none';
+    displayAdminLessons();
+  } else {
+    alert('كلمة المرور خاطئة!');
+  }
+}
+
+// عرض الدروس في لوحة الأدمن
+function displayAdminLessons() {
+  const list = document.getElementById('adminLessonList');
+  list.innerHTML = '';
+  lessons.forEach((l, i) => {
+    list.innerHTML += `<li><strong>${l.title}</strong> [${l.role}] - ${l.content} 
+    <button onclick="deleteLesson(${i})">حذف</button></li>`;
+  });
+}
+
+// إضافة درس جديد
+function addLesson() {
+  const role = document.getElementById('adminRole').value;
+  const title = document.getElementById('lessonTitle').value.trim();
+  const content = document.getElementById('lessonContent').value.trim();
+
+  if(title && content) {
+    lessons.push({role, title, content});
+    localStorage.setItem('lessons', JSON.stringify(lessons));
+    document.getElementById('lessonTitle').value = '';
+    document.getElementById('lessonContent').value = '';
+    displayAdminLessons();
+    showLessons();
+  } else {
+    alert('املأ جميع الحقول!');
+  }
+}
+
+// حذف درس
+function deleteLesson(index) {
+  if(confirm('هل تريد حذف هذا الدرس؟')) {
+    lessons.splice(index,1);
+    localStorage.setItem('lessons', JSON.stringify(lessons));
+    displayAdminLessons();
+    showLessons();
+  }
+}
+
+// عرض الدروس حسب الوظيفة مباشرة عند الاختيار
+function showLessons() {
+  const role = document.getElementById('employeeRole').value;
+  const list = document.getElementById('employeeLessonList');
+  list.innerHTML = '';
+  if(!role) return;
+  lessons.filter(l => l.role === role)
+         .forEach(l => list.innerHTML += `<li><strong>${l.title}</strong><br>${l.content}</li>`);
+}
+
+// تحميل البيانات عند فتح الصفحة
+window.onload = function() {
+  showLessons();
+}
+</script>
+
+</body>
+</html>
